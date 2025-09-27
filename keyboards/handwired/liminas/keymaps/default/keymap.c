@@ -20,6 +20,63 @@
 #define RAISE MO(_RAISE)
 #define LOWER MO(_LOWER)
 
+
+#include "pointing_device.h"
+#include "drivers/sensors/pmw3389.h"
+
+
+
+void keyboard_post_init_user(void){
+	debug_enable=true;
+	debug_matrix=true;
+	debug_mouse=true;
+
+    // Force pointing device initialization
+    pointing_device_init();
+    wait_ms(100);
+
+    // Set CPI explicitly
+    pointing_device_set_cpi(3200);
+
+    dprintf("Trackball initialized, CPI: %d\n", pointing_device_get_cpi());
+}
+
+report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
+	dprintf("In pointing_device_task_user\n");
+    if (mouse_report.x != 0 || mouse_report.y != 0) {
+        dprintf("Raw delta - X: %d, Y: %d\n", mouse_report.x, mouse_report.y);
+    }
+
+    static uint16_t debug_timer = 0;
+    if (timer_elapsed(debug_timer) > 1000) {
+        // Read motion register first
+        uint8_t motion = pmw33xx_read(0, REG_Motion);
+
+        if (motion & 0x80) { // Motion bit is set
+            // Read all delta registers manually
+            uint8_t dx_low = pmw33xx_read(0, REG_Delta_X_L);
+            uint8_t dx_high = pmw33xx_read(0, REG_Delta_X_H);
+            uint8_t dy_low = pmw33xx_read(0, REG_Delta_Y_L);
+            uint8_t dy_high = pmw33xx_read(0, REG_Delta_Y_H);
+
+            // Combine into 16-bit values
+            int16_t raw_dx = (int16_t)((dx_high << 8) | dx_low);
+            int16_t raw_dy = (int16_t)((dy_high << 8) | dy_low);
+
+            dprintf("Motion: 0x%02X Raw DX: %d (%02X%02X) DY: %d (%02X%02X)\n",
+                    motion, raw_dx, dx_high, dx_low, raw_dy, dy_high, dy_low);
+        }
+
+        debug_timer = timer_read();
+    }
+	return mouse_report;
+}
+
+
+void housekeeping_task_user(void) {
+
+}
+
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     /* Base (qwerty)
      * +-----------------------------------------+                             +-----------------------------------------+
@@ -49,7 +106,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                           _______,          _______,                              _______,          _______
     )
     */
-
+/*
     [_BASE] = LAYOUT(
         DP_DLR,  DP_AMPR,      DP_LBRC,      DP_LCBR,      DP_RCBR,      DP_LPRN,            DP_ASTR, DP_RPRN,         DP_PLUS,      DP_RBRC,      DP_EXLM,      DP_HASH,
         KC_TAB,  DP_SCLN,      DP_COMM,      DP_DOT,       DP_P,         DP_Y,               DP_F,    DP_G,            DP_C,         DP_R,         DP_L,         DP_SLSH,
@@ -81,4 +138,5 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                           _______, _______, _______, _______,            _______, _______, _______, _______,
                           _______,          _______,                              _______,          _______
     )
+*/
 };
