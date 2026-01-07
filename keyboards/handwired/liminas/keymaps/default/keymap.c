@@ -350,6 +350,7 @@ void housekeeping_task_user(void) {
 }
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
+	[_BASE] = LAYOUT(MS_BTN1,MS_BTN1,MS_BTN2,MS_BTN1,MS_BTN1,MS_BTN2)
     /* Base (qwerty)
      * +-----------------------------------------+                             +-----------------------------------------+
      * |   $  |   &  |   [  |   {  |   }  |   (  |                             |   *  |   )  |   +  |   ]  |   !  |   #  |
