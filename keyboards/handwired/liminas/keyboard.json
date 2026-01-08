@@ -11,6 +11,25 @@
     "processor": "RP2040",
     "bootloader": "rp2040",
     "diode_direction": "COL2ROW",
+    "features": {
+        "rgblight": true
+    },
+    "rgblight": {
+        "driver": "ws2812",
+        "led_count": 6,
+        "animations": {
+            "rainbow_mood": true,
+            "rainbow_swirl": true
+        },
+        "default": {
+            "animation": "rainbow_mood",
+            "val": 200
+        }
+    },
+    "ws2812": {
+        "pin": "GP2",
+        "driver": "vendor"
+    },
     "bootmagic": {
       "matrix": [0, 0]
     },

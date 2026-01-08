@@ -20,7 +20,7 @@
 #define RAISE MO(_RAISE)
 #define LOWER MO(_LOWER)
 
-
+#include "quantum.h"
 #include "pointing_device.h"
 #include "drivers/sensors/pmw3389.h"
 
@@ -320,37 +320,49 @@ uint8_t pmw33xx_srom_get_byte(uint16_t position) {
 void keyboard_post_init_user(void){
 	debug_enable=true;
 	debug_matrix=true;
-	debug_mouse=true;
+	debug_mouse=false;
 }
 
-/*
+
+enum custom_keycodes {
+	DRAG_SCROLL = SAFE_RANGE,
+};
+
+bool set_scrolling = false;
+
+#define SCROLL_DIVISOR_H 32.0
+#define SCROLL_DIVISOR_V 32.0
+
+float scroll_accumulated_h = 0;
+float scroll_accumulated_v = 0;
+
 report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
-	dprintf("In pointing_device_task_user\n");
-    if (mouse_report.x != 0 || mouse_report.y != 0) {
-        dprintf("Raw delta - X: %d, Y: %d\n", mouse_report.x, mouse_report.y);
+    if (set_scrolling) {
+        scroll_accumulated_h += (float)mouse_report.x / SCROLL_DIVISOR_H;
+        scroll_accumulated_v += (float)mouse_report.y / SCROLL_DIVISOR_V;
+
+        mouse_report.h = -1 * (int8_t)scroll_accumulated_h;
+        mouse_report.v = -1 * (int8_t)scroll_accumulated_v;
+
+        scroll_accumulated_h -= (int8_t)scroll_accumulated_h;
+        scroll_accumulated_v -= (int8_t)scroll_accumulated_v;
+
+        mouse_report.x = 0;
+        mouse_report.y = 0;
     }
-
-
-	return mouse_report;
+    return mouse_report;
 }
-*/
 
-
-void housekeeping_task_user(void) {
-    static uint16_t debug_timer = 0;
-    if (timer_elapsed(debug_timer) > 1000) {
-
-
-
-        dprintf("SROM ID: %d\n", pmw33xx_read(0, REG_SROM_ID));
-        pmw33xx_write(0, REG_Config2, 0x00);
-
-        debug_timer = timer_read();
-    }
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+	if (keycode == DRAG_SCROLL) {
+		set_scrolling = record->event.pressed;
+	}
+	return true;
 }
+
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
-	[_BASE] = LAYOUT(MS_BTN1,MS_BTN1,MS_BTN2,MS_BTN1,MS_BTN1,MS_BTN2)
+	[_BASE] = LAYOUT(MS_BTN1, MS_BTN1, MS_BTN2, DRAG_SCROLL, UG_TOGG, MS_BTN2)
     /* Base (qwerty)
      * +-----------------------------------------+                             +-----------------------------------------+
      * |   $  |   &  |   [  |   {  |   }  |   (  |                             |   *  |   )  |   +  |   ]  |   !  |   #  |

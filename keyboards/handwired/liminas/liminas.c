@@ -1,26 +1,24 @@
 #include "liminas.h"
 
+#include "quantum.h"
 #include <math.h>
 #include "report.h"
 
 
-const float phi = sin(30 * (M_PI / 180.0));
-const float R = 1;
-const float r = R * phi;
 
-report_mouse_t pointing_device_task_kb(report_mouse_t mouse_report) {
 
-/*
-	float y_h = sqrt(2 * r * mouse_report.x - mouse_report.x * mouse_report.x);
-	float y_h = 0.f;
-	float c = mouse_report.x + y_h;
+#ifdef RGB_MATRIX_ENABLE
+led_config_t g_led_config = {
+    {
+        { 0, 1, 2, 3, 4, 5 }
+    },
+    {
+        { 0,0 }, { 10, 0 }, { 20, 0 }, { 30, 0 }, { 40, 0 }, { 50, 0 }
+    },
+    {
+        LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT
+    }
+};
+#endif
 
-	float x_c = c / phi;
-	float y_c = mouse_report.y > 0 ? mouse_report.y - y_h : mouse_report.y + y_h;
 
-	mouse_report.v = x_c;
-	mouse_report.h = y_c;
-*/
-
-	return mouse_report;
-}
