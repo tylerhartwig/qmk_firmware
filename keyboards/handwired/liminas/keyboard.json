@@ -20,7 +20,7 @@
     },
     "split": {
       "bootmagic": {
-        "matrix": [7, 0]
+        "matrix": [5, 0]
       }
     },
 

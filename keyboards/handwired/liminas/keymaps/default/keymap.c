@@ -357,21 +357,36 @@ bool set_scrolling = false;
 float scroll_accumulated_h = 0;
 float scroll_accumulated_v = 0;
 
-report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
-    if (set_scrolling) {
-        scroll_accumulated_h += (float)mouse_report.x / SCROLL_DIVISOR_H;
-        scroll_accumulated_v += (float)mouse_report.y / SCROLL_DIVISOR_V;
+report_mouse_t pointing_device_task_combined_user(report_mouse_t left_report, report_mouse_t right_report) {
+	// use left for scrolling
+    scroll_accumulated_h += (float)left_report.x / SCROLL_DIVISOR_H;
+    scroll_accumulated_v += (float)left_report.y / SCROLL_DIVISOR_V;
 
-        mouse_report.h = -1 * (int8_t)scroll_accumulated_h;
-        mouse_report.v = -1 * (int8_t)scroll_accumulated_v;
+    left_report.h = -1 * (int8_t)scroll_accumulated_h;
+    left_report.v = -1 * (int8_t)scroll_accumulated_v;
+
+    scroll_accumulated_h -= (int8_t)scroll_accumulated_h;
+    scroll_accumulated_v -= (int8_t)scroll_accumulated_v;
+
+    left_report.x = 0;
+    left_report.y = 0;
+
+	// Also use right for scrolling
+    if (set_scrolling) {
+        scroll_accumulated_h += (float)right_report.x / SCROLL_DIVISOR_H;
+        scroll_accumulated_v += (float)right_report.y / SCROLL_DIVISOR_V;
+
+        right_report.h = -1 * (int8_t)scroll_accumulated_h;
+        right_report.v = -1 * (int8_t)scroll_accumulated_v;
 
         scroll_accumulated_h -= (int8_t)scroll_accumulated_h;
         scroll_accumulated_v -= (int8_t)scroll_accumulated_v;
 
-        mouse_report.x = 0;
-        mouse_report.y = 0;
+        right_report.x = 0;
+        right_report.y = 0;
     }
-    return mouse_report;
+
+    return pointing_device_combine_reports(left_report, right_report);
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
@@ -418,7 +433,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         _______, DP_QUOT,      DP_Q,         DP_J,         DP_K,         DP_X,               DP_B,    DP_M,            DP_W,         DP_V,         DP_Z,         _______,
 
                                KC_BSPC,      OSL(_SYM),    _______,      _______,            _______, _______,         KC_ENT,  LT(_NAV,KC_SPC),
-                               KC_TAB,                     _______,                                   _______,                  _______
+                               KC_TAB,                     _______,                               DRAG_SCROLL,                          MS_BTN1
     ),
 
 
