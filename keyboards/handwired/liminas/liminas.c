@@ -18,7 +18,9 @@ led_config_t g_led_config = {
         { 0,0 }, { 10, 0 }, { 20, 0 }, { 30, 0 },
         { 0,0 }, { 10, 0 }, { 20, 0 }, { 30, 0 },
         { 0,0 }, { 10, 0 }, { 20, 0 }, { 30, 0 },
-        { 0,0 }, { 10, 0 }, { 20, 0 }, { 30, 0 }
+        { 0,0 }, { 10, 0 }, { 20, 0 }, { 30, 0 },
+        { 0,0 }, { 10, 0 }, { 20, 0 }, { 30, 0 },
+        { 0,0 }, { 10, 0 }
     },
     {
         LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT,
@@ -26,7 +28,9 @@ led_config_t g_led_config = {
         LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT,
         LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT,
         LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT,
-        LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT
+        LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT,
+        LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT,
+		LED_FLAG_KEYLIGHT, LED_FLAG_KEYLIGHT
     }
 };
 #endif
