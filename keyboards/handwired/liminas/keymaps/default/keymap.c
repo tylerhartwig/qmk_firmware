@@ -433,7 +433,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         _______, DP_QUOT,      DP_Q,         DP_J,         DP_K,         DP_X,               DP_B,    DP_M,            DP_W,         DP_V,         DP_Z,         _______,
 
                                KC_BSPC,      OSL(_SYM),    _______,      _______,            _______, _______,         KC_ENT,  LT(_NAV,KC_SPC),
-                               KC_TAB,                     _______,                               DRAG_SCROLL,                          MS_BTN1
+                               KC_TAB,                     _______,                                   MS_BTN2,                          MS_BTN1
     ),
 
 
