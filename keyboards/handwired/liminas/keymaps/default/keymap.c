@@ -90,6 +90,7 @@ enum custom_keycodes {
 	SS_VIEW,
 
 	// Autofill Keys
+	SS_WRK_EMAIL
 };
 
 bool set_scrolling = false;
@@ -150,6 +151,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 			return false;
 		case SS_VIEW:
 			if (record->event.pressed) { SEND_STRING("VIEW "); }
+			return false;
+		case SS_WRK_EMAIL:
+			if (record->event.pressed) { SEND_STRING("tyler.hartwig@materialize.com"); }
 			return false;
 	}
 
@@ -224,14 +228,24 @@ bool get_chordal_hold(uint16_t tap_hold_keycode, keyrecord_t *tap_hold_record,
 					  uint16_t other_keycode,    keyrecord_t *other_record) {
 
 	switch(tap_hold_keycode) {
-		case LGUI_T(DP_E):
+		case LGUI_T(DP_E): // Left GUI (Cmd)
 			switch(other_keycode) {
-				case DP_K:
+				case DP_K: // allow for k, useful in slack for same hand channel jumping
+				case DP_C:
+				case DP_V: // allow for pasting, in case this is useful while typing
+				case KC_ENT: // allow for enter
 					return true;
-				case DP_H;
+				default: // disable Left GUI for all other key combinations
 					return false;
 			}
 		break;
+		case LALT_T(DP_O):
+			switch(other_keycode) {
+				default: // disable left ALT for all other key combinations
+				return false;
+			}
+			break;
+
 	}
 
 	return get_chordal_hold_default(tap_hold_record, other_record);

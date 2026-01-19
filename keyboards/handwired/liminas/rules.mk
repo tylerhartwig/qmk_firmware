@@ -18,6 +18,11 @@ SPLIT_KEYBOARD = yes
 SERIAL_DRIVER = vendor
 MOUSEKEY_ENABLE = yes
 CAPS_WORD_ENABLE = yes
+WS2812_DRIVER = custom
+
+LED_MATRIX_CUSTOM_USER = yes
+
+SRC += ws2812_custom.c
 
 # Trackball
 POINTING_DEVICE_ENABLE = yes

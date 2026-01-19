@@ -12,8 +12,6 @@
     "bootloader": "rp2040",
     "diode_direction": "COL2ROW",
     "ws2812": {
-        "pin": "GP2",
-        "driver": "vendor"
     },
     "bootmagic": {
       "matrix": [0, 0]
