@@ -6,6 +6,7 @@
 #define _SYM 1
 #define _NAV 2
 #define _AUTO 3
+#define _LED 4
 
 #define SFT_ESC  SFT_T(KC_ESC)
 #define CTL_BSPC CTL_T(KC_BSPC)
@@ -37,10 +38,15 @@ void check_key_timer(void);
 void process_rgb_typing_effect(void);
 #endif
 
+
+rgb_t rgb_default_blue;
 void keyboard_post_init_user(void){
+	rgb_default_blue = hsv_to_rgb((hsv_t){HSV_DEFAULT_BLUE});
 	debug_enable=true;
 	debug_matrix=true;
 	debug_mouse=true;
+	pointing_device_set_cpi_on_side(true, 1000); // true is left
+	pointing_device_set_cpi_on_side(false, 1500); // false is right
 }
 
 
@@ -71,10 +77,10 @@ void check_key_timer(void) {
 
 void process_rgb_typing_effect(void){
 	if(rgb_effect_is_idle && is_typing_idle != rgb_effect_is_idle) {
-		rgb_matrix_mode(RGB_TYPING_EFFECT);
+		//rgb_matrix_mode(RGB_TYPING_EFFECT);
 		rgb_effect_is_idle = false;
 	} else if (!rgb_effect_is_idle && is_typing_idle != rgb_effect_is_idle) {
-		rgb_matrix_mode(RGB_MATRIX_DEFAULT_MODE);
+		//rgb_matrix_mode(RGB_MATRIX_DEFAULT_MODE);
 		rgb_effect_is_idle = true;
 	}
 }
@@ -233,6 +239,8 @@ bool get_chordal_hold(uint16_t tap_hold_keycode, keyrecord_t *tap_hold_record,
 				case DP_K: // allow for k, useful in slack for same hand channel jumping
 				case DP_C:
 				case DP_V: // allow for pasting, in case this is useful while typing
+				case DP_Z: // allow for undo
+				case DP_T: // allow for new tab
 				case KC_ENT: // allow for enter
 					return true;
 				default: // disable Left GUI for all other key combinations
@@ -286,7 +294,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_ESC,  LCTL_T(DP_A), LALT_T(DP_O), LGUI_T(DP_E), LSFT_T(DP_U), DP_I,               DP_D,    RSFT_T(DP_H),    RGUI_T(DP_T), LALT_T(DP_N), RCTL_T(DP_S), DP_MINS,
         CW_TOGG, DP_QUOT,      DP_Q,         DP_J,         DP_K,         DP_X,               DP_B,    DP_M,            DP_W,         DP_V,         DP_Z,         _______,
 
-                               KC_BSPC,      OSL(_SYM),    _______,      _______,            _______, _______,         KC_ENT,  LT(_NAV,KC_SPC),
+                               KC_BSPC,      OSL(_SYM),    _______,      _______,            MO(_LED), _______,         KC_ENT,  LT(_NAV,KC_SPC),
                                OSL(_AUTO),                 _______,                                   MS_BTN2,                          MS_BTN1
     ),
 
@@ -320,5 +328,64 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
                           _______, _______, _______, _______,            _______, _______, _______, _______,
                           _______,          _______,                              _______,          _______
+    ),
+
+    [_LED] = LAYOUT(
+        _______, _______, _______, _______, _______, _______,            _______, _______, _______, _______, _______, _______,
+        _______, _______, _______, _______, RM_PREV, _______,            _______, _______, _______, _______, _______, _______,
+        _______, _______, _______, _______, _______, _______,            _______, RM_HUEU, _______, RM_NEXT, _______, _______,
+        _______, _______, _______, _______, _______, _______,            _______, RM_HUED, _______, _______, _______, _______,
+
+                          _______, _______, _______, _______,            _______, _______, _______, _______,
+                          _______,          _______,                              _______,          _______
     )
 };
+
+
+void handle_sym_layout_leds(uint8_t layer, uint8_t led_min, uint8_t led_max) {
+	for(uint8_t i = led_min; i < led_max; i++) {
+		if((LEFT_UNDERGLOW_START <= i && i <= LEFT_UNDERGLOW_END) ||
+	       (RIGHT_UNDERGLOW_START <= i && i <= RIGHT_UNDERGLOW_END))  {
+			rgb_matrix_set_color(i, RGB_RED);
+		} else if(0 <= i && i <= 29) {
+			int col = i / 4;
+			int row = i % 4;
+			if(keymap_key_to_keycode(layer, (keypos_t){col,row}) > KC_TRNS) {
+				rgb_matrix_set_color(i, RGB_RED);
+			}
+		} else if(124 <= i && i <= 153) {
+			int j = i - 124;
+			int col = (j / 4);
+			int row = (j % 4) + 5;
+			if(keymap_key_to_keycode(layer, (keypos_t){col,row}) > KC_TRNS) {
+				rgb_matrix_set_color(i, RGB_RED);
+			}
+		}
+	}
+}
+
+void handle_default_layout_leds(uint8_t led_min, uint8_t led_max) {
+	for(uint8_t i = led_min; i < led_max; i++) {
+		if((LEFT_UNDERGLOW_START <= i && i <= LEFT_UNDERGLOW_END) ||
+	       (RIGHT_UNDERGLOW_START <= i && i <= RIGHT_UNDERGLOW_END))  {
+			rgb_matrix_set_color(i,
+				rgb_default_blue.r,
+				rgb_default_blue.g,
+				rgb_default_blue.b);
+		}
+	}
+}
+
+
+bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
+	uint8_t active_layer = get_highest_layer(layer_state | default_layer_state);
+	switch(active_layer){
+		case _SYM:
+			//handle_sym_layout_leds(active_layer, led_min, led_max);
+			break;
+		default:
+			//handle_default_layout_leds(led_min, led_max);
+			break;
+	}
+    return false;
+}
