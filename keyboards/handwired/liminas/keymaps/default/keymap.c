@@ -141,6 +141,27 @@ report_mouse_t pointing_device_task_combined_user(report_mouse_t left_report, re
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 	switch (keycode) {
+
+		// Handle special case mod-taps on sym layer for DP, these are shifted keys
+		case RSFT_T(DP_4):
+            if (record->tap.count && record->event.pressed) {
+                tap_code16(DP_4); // Send DP_4 on tap
+                return false;        // Return false to ignore further processing of key
+            }
+            break;
+		case RGUI_T(DP_5):
+            if (record->tap.count && record->event.pressed) {
+                tap_code16(DP_5); // Send DP_5 on tap
+                return false;        // Return false to ignore further processing of key
+            }
+            break;
+		case LALT_T(DP_6):
+            if (record->tap.count && record->event.pressed) {
+                tap_code16(DP_6); // Send DP_6 on tap
+                return false;        // Return false to ignore further processing of key
+            }
+            break;
+
 		case DRAG_SCROLL:
 			set_scrolling = record->event.pressed;
 			return false;
@@ -300,12 +321,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 
     [_SYM] = LAYOUT(
-        _______, _______, _______, _______, _______, DP_EQL,             DP_EQL,  _______, DP_SLSH, DP_ASTR, DP_MINS, _______,
-        _______, _______, _______, _______, _______, _______,            _______, DP_1,    DP_2,    DP_3,    DP_PLUS, DP_AT,
-        _______, _______, _______, _______, _______, _______,            _______, DP_4,    DP_5,    DP_6,    DP_PLUS, DP_BSLS,
-        _______, _______, _______, _______, _______, _______,            _______, DP_7,    DP_8,    DP_9,    DP_DOT,  _______,
+        _______, _______, _______, _______, _______, DP_EQL,             DP_EQL,  _______,       DP_SLSH,      DP_ASTR,      DP_MINS,         _______,
+        _______, _______, _______, _______, _______, _______,            _______, DP_1,          DP_2,         DP_3,         DP_PLUS,         DP_AT,
+        _______, _______, _______, _______, _______, _______,            _______, RSFT_T(DP_4), RGUI_T(DP_5), LALT_T(DP_6), RCTL_T(DP_PLUS), DP_BSLS,
+        _______, _______, _______, _______, _______, _______,            _______, DP_7,          DP_8,         DP_9,         DP_DOT,          _______,
 
-                          _______, _______, _______, _______,            _______, _______, _______, DP_0,
+                          _______, _______, _______, _______,            _______, _______, KC_NO,   DP_0,
                           _______,          _______,                              _______,          _______
     ),
 
@@ -342,25 +363,46 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 
 
+bool set_underglow(int i, uint8_t r, uint8_t g, uint8_t b) {
+	if((LEFT_UNDERGLOW_START <= i && i <= LEFT_UNDERGLOW_END) ||
+	   (RIGHT_UNDERGLOW_START <= i && i <= RIGHT_UNDERGLOW_END))  {
+		rgb_matrix_set_color(i, r, g, b);
+		return true;
+	}
+	return false;
+}
+
+bool set_if_key_set(int i, uint8_t layer, uint8_t r, uint8_t g, uint8_t b) {
+	if(0 <= i && i <= 29) {
+		int col = i / 4;
+		int row = i % 4;
+		if(keymap_key_to_keycode(layer, (keypos_t){col,row}) > KC_TRNS) {
+			rgb_matrix_set_color(i, r, g, b);
+			return true;
+		}
+	} else if(124 <= i && i <= 153) {
+		int j = i - 124;
+		int col = (j / 4);
+		int row = (j % 4) + 5;
+		if(keymap_key_to_keycode(layer, (keypos_t){col,row}) > KC_TRNS) {
+			rgb_matrix_set_color(i, r, g, b);
+			return true;
+		}
+	}
+	return false;
+}
+
 void handle_sym_layout_leds(uint8_t layer, uint8_t led_min, uint8_t led_max) {
 	for(uint8_t i = led_min; i < led_max; i++) {
-		if((LEFT_UNDERGLOW_START <= i && i <= LEFT_UNDERGLOW_END) ||
-	       (RIGHT_UNDERGLOW_START <= i && i <= RIGHT_UNDERGLOW_END))  {
-			rgb_matrix_set_color(i, RGB_RED);
-		} else if(0 <= i && i <= 29) {
-			int col = i / 4;
-			int row = i % 4;
-			if(keymap_key_to_keycode(layer, (keypos_t){col,row}) > KC_TRNS) {
-				rgb_matrix_set_color(i, RGB_RED);
-			}
-		} else if(124 <= i && i <= 153) {
-			int j = i - 124;
-			int col = (j / 4);
-			int row = (j % 4) + 5;
-			if(keymap_key_to_keycode(layer, (keypos_t){col,row}) > KC_TRNS) {
-				rgb_matrix_set_color(i, RGB_RED);
-			}
-		}
+		if(set_underglow(i, RGB_RED))  {}
+		else if(set_if_key_set(i, layer, RGB_RED)) {}
+	}
+}
+
+void handle_nav_layout_leds(uint8_t layer, uint8_t led_min, uint8_t led_max) {
+	for(uint8_t i = led_min; i < led_max; i++) {
+		if(set_underglow(i, RGB_GREEN))  {}
+		else if(set_if_key_set(i, layer, RGB_GREEN)) {}
 	}
 }
 
@@ -381,7 +423,10 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
 	uint8_t active_layer = get_highest_layer(layer_state | default_layer_state);
 	switch(active_layer){
 		case _SYM:
-			//handle_sym_layout_leds(active_layer, led_min, led_max);
+			handle_sym_layout_leds(active_layer, led_min, led_max);
+			break;
+		case _NAV:
+			handle_nav_layout_leds(active_layer, led_min, led_max);
 			break;
 		default:
 			//handle_default_layout_leds(led_min, led_max);
